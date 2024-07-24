@@ -11,5 +11,8 @@
         "express": "^4.19.2"
     },
     "author": "",
-    "license": "MIT"
+    "license": "MIT",
+    "engines": {
+       "node": "20.11.0"
+    }
 }
