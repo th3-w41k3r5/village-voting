@@ -10,11 +10,7 @@ const Results = ({ onNextRound }) => {
   }, []);
 
   return (
-<<<<<<< HEAD
     <div className="results">
-=======
-    <div>
->>>>>>> 66509195d8570877425a57c7e213360fed3dac5b
       <h2>Results</h2>
       <ul>
         {Object.entries(results).map(([name, count]) => (
@@ -27,8 +23,3 @@ const Results = ({ onNextRound }) => {
 };
 
 export default Results;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 66509195d8570877425a57c7e213360fed3dac5b
