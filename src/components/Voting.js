@@ -36,8 +36,3 @@ const Voting = ({ names, onVote }) => {
 };
 
 export default Voting;
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 66509195d8570877425a57c7e213360fed3dac5b
