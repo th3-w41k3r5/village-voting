@@ -1,28 +1,43 @@
 const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
+const path = require('path');
 const app = express();
+
 app.use(express.json());
 app.use(cors());
 
-let names = fs.readFileSync('server/villagename.txt', 'utf-8').split('\n').map(name => name.trim()).filter(name => name);
-let votes = {};
-let round = 1;
+const filePath = path.join(__dirname, 'villagename.txt');
+let names = fs.readFileSync(filePath, 'utf-8').split('\n').map(name => name.trim()).filter(name => name);
+
+let rounds = [];
+let votes = [];
+let currentRound = 0;
+
+// Function to create sets of 3 names
+const createRounds = () => {
+  let shuffledNames = [...names].sort(() => 0.5 - Math.random());
+  while (shuffledNames.length) {
+    rounds.push(shuffledNames.splice(0, 3));
+  }
+};
+
+createRounds();
 
 app.get('/names', (req, res) => {
-  res.json(names);
+  res.json(rounds[currentRound] || []);
 });
 
 app.post('/vote', (req, res) => {
   const { voter, name } = req.body;
-  if (!votes[round]) votes[round] = {};
-  votes[round][voter] = name;
+  if (!votes[currentRound]) votes[currentRound] = {};
+  votes[currentRound][voter] = name;
   res.status(200).send('Vote submitted');
 });
 
 app.get('/results', (req, res) => {
-  const currentVotes = votes[round] || {};
-  const voteCounts = names.reduce((acc, name) => {
+  const currentVotes = votes[currentRound] || {};
+  const voteCounts = (rounds[currentRound] || []).reduce((acc, name) => {
     acc[name] = Object.values(currentVotes).filter(vote => vote === name).length;
     return acc;
   }, {});
@@ -30,23 +45,30 @@ app.get('/results', (req, res) => {
 });
 
 app.post('/next-round', (req, res) => {
-  const currentVotes = votes[round] || {};
-  const voteCounts = names.reduce((acc, name) => {
+  const currentVotes = votes[currentRound] || {};
+  const voteCounts = (rounds[currentRound] || []).reduce((acc, name) => {
     acc[name] = Object.values(currentVotes).filter(vote => vote === name).length;
     return acc;
   }, {});
 
-  const minVotes = Math.min(...Object.values(voteCounts));
-  names = names.filter(name => voteCounts[name] !== minVotes);
+  const maxVotes = Math.max(...Object.values(voteCounts));
+  const winners = Object.keys(voteCounts).filter(name => voteCounts[name] === maxVotes);
 
-  if (names.length > 1) {
-    round++;
+  if (currentRound < rounds.length - 1) {
+    rounds[currentRound + 1].push(...winners);
+    currentRound++;
     res.status(200).send('Next round started');
+  } else if (winners.length === 1) {
+    res.json({ winner: winners[0] });
   } else {
-    res.status(200).send('Voting complete');
+    rounds.push(winners);
+    currentRound++;
+    res.status(200).send('Next round started');
   }
 });
 
 app.listen(5000, () => {
   console.log('Server running on http://localhost:5000');
 });
+
+
